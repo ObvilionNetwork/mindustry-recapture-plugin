@@ -4,13 +4,11 @@ import arc.files.Fi;
 import arc.graphics.Color;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
-import arc.util.Log;
-import arc.util.Timer;
 import arc.util.io.PropertiesUtils;
 import mindustry.content.Fx;
 import mindustry.entities.Effect;
-import mindustry.gen.Player;
 
+import ru.obvilion.Recapture;
 import ru.obvilion.utils.ResourceUtil;
 import java.lang.reflect.Field;
 
@@ -21,41 +19,13 @@ public class EffectHelper {
     public static void init() {
         effects = new Seq<>();
 
-        final Fi effect = ru.obvilion.Recapture.pluginDir.child("effects.properties");
+        final Fi effect = Recapture.pluginDir.child("effects.properties");
         if (!effect.exists()) ResourceUtil.copy("effects.properties", effect);
 
         properties = new ObjectMap<>();
         PropertiesUtils.load(
-            properties, ru.obvilion.Recapture.pluginDir.child("effects.properties").reader()
+            properties, Recapture.pluginDir.child("effects.properties").reader()
         );
-    }
-
-    public static void onJoin(Player player) {
-        on("onJoin", player.team().core().x / 8, player.team().core().y / 8);
-    }
-
-    public static void onLeave(Player player) {
-        on("onLeave", player);
-    }
-
-    public static void onMove(Player player) {
-        final String position = (player.x / 8) + "," + (player.y / 8);
-        on("onMove", player, position);
-    }
-
-    public static void on(String key, Player player, String position) {
-        final String[] positions = position.split(",");
-        final float x = Float.parseFloat(positions[0]);
-        final float y = Float.parseFloat(positions[1]);
-
-        on(key, x, y);
-    }
-
-    public static void on(String key, Player player) {
-        final int x = (int) (player.x / 8);
-        final int y = (int) (player.y / 8);
-
-        on(key, x, y);
     }
 
     public static void on(String key, float x, float y) {

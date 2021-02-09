@@ -1,27 +1,21 @@
 package ru.obvilion.utils;
 
 import arc.Events;
-import arc.graphics.Colors;
-import arc.util.Log;
+import arc.struct.Seq;
 import mindustry.Vars;
+import mindustry.content.UnitTypes;
+import mindustry.core.NetServer;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.game.Teams;
 import mindustry.gen.*;
 
-import mindustry.world.Block;
 import mindustry.world.blocks.storage.CoreBlock;
 import ru.obvilion.config.Config;
 import ru.obvilion.config.Lang;
 import ru.obvilion.effects.EffectHelper;
 import ru.obvilion.events.CoreCaptureEvent;
 import ru.obvilion.events.EventsHelper;
-import ru.obvilion.events.PlayerMoveEvent;
-
-import java.awt.*;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Loader {
     public static boolean firstInit = true;
@@ -42,49 +36,7 @@ public class Loader {
     }
 
     public static void initEvents() {
-        Events.on(EventType.ServerLoadEvent.class, event -> {
-            new Thread(() -> {
-                final DiscordWebhook webhook = new DiscordWebhook(Config.get("discord.webhook"));
-                webhook.setAvatarUrl(Config.get("discord.webhook.avatar"));
-                webhook.setUsername(Config.get("discord.webhook.name"));
-                webhook.addEmbed(new DiscordWebhook.EmbedObject()
-                        .setTitle(Lang.get("onServerStart"))
-                        .setColor(new Color(92, 137, 214)));
-                try {
-                    webhook.execute();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                } finally {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
-        });
-
-        Events.on(EventType.PlayerJoin.class, event -> {
-            final Player player = event.player;
-            TeamHelper.updatePlayerTeam(player);
-
-            player.sendMessage(Lang.get("motd"));
-            Call.sendMessage(Lang.get("onJoin", player.name));
-
-            EffectHelper.onJoin(player);
-
-            new Thread(() -> {
-                final DiscordWebhook webhook = new DiscordWebhook(Config.get("discord.webhook"));
-                webhook.setAvatarUrl(Config.get("discord.webhook.avatar"));
-                webhook.setUsername(fixName(player.name));
-                webhook.addEmbed(new DiscordWebhook.EmbedObject()
-                        .setTitle(Lang.get("discord.onJoin"))
-                        .setColor(new Color(110, 237, 139)));
-                try {
-                    webhook.execute();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                } finally {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
-        });
+        Vars.netServer.assigner = (player, players) -> TeamHelper.checkTeam(player);
 
         Events.on(EventType.WorldLoadEvent.class, playEvent -> {
             final int[] index = {0};
@@ -101,37 +53,6 @@ public class Loader {
             Groups.player.forEach(TeamHelper::updatePlayerTeam);
         });
 
-        Events.on(EventType.PlayerLeave.class, event -> {
-            final Player player = event.player;
-
-            EffectHelper.onLeave(player);
-            PlayerMoveEvent.remove(player);
-
-            Call.sendMessage(Lang.get("onLeave", player.name));
-
-            new Thread(() -> {
-                final DiscordWebhook webhook = new DiscordWebhook(Config.get("discord.webhook"));
-                webhook.setAvatarUrl(Config.get("discord.webhook.avatar"));
-                webhook.setUsername(fixName(player.name));
-                webhook.addEmbed(new DiscordWebhook.EmbedObject()
-                        .setTitle(Lang.get("discord.onLeave"))
-                        .setColor(new Color(214, 92, 92)));
-                try {
-                    webhook.execute();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                } finally {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
-        });
-
-        Events.on(PlayerMoveEvent.class, event -> {
-            final Player player = event.player;
-
-            EffectHelper.onMove(player);
-        });
-
         Events.on(CoreCaptureEvent.class, event -> {
             if (Vars.state.isPaused()) return;
 
@@ -139,7 +60,7 @@ public class Loader {
             final CoreBlock.CoreBuild core = event.core;
 
             int id = CoreCaptureEvent.cores.indexOf(core);
-            final float multiplier = player.hitSize * 0.0015f;
+            final float multiplier = player.type.weapons.first().bullet.damage * 0.0025f * Config.getFloat("multiplier");
 
             float x = core.x / 8 - (float) core.block.size / 2 - 0.5f;
             float y = core.y / 8 - (float) core.block.size / 2 - 0.5f;
@@ -214,7 +135,7 @@ public class Loader {
                 CoreCaptureEvent.x.set(id, x);
                 CoreCaptureEvent.y.set(id, y);
 
-                EffectHelper.on("onMove", x, y);
+                EffectHelper.on("onCapture", x, y);
             } else {
                 if (CoreCaptureEvent.health.get(id) > 0f) {
                     CoreCaptureEvent.health.set(id, CoreCaptureEvent.health.get(id) - multiplier);
@@ -228,69 +149,5 @@ public class Loader {
                 CoreCaptureEvent.statuses.set(id, event.unit.team.name);
             }
         });
-
-        Vars.netServer.admins.addChatFilter((player, text) -> {
-            Call.sendMessage(Lang.get("message", player.color.toString(), player.name, text), null, player);
-
-            new Thread(() -> {
-                final DiscordWebhook webhook = new DiscordWebhook(Config.get("discord.webhook"));
-                webhook.setAvatarUrl(Config.get("discord.webhook.avatar"));
-                webhook.setUsername(fixName(player.name));
-                webhook.setContent(fixName(text).replaceAll("@", ""));
-                try {
-                    webhook.execute();
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                } finally {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
-
-            return null;
-        });
-    }
-
-    static String fixName(String name){
-        name = name.trim();
-        if(name.equals("[") || name.equals("]")){
-            return "";
-        }
-
-        for(int i = 0; i < name.length(); i++){
-            if(name.charAt(i) == '[' && i != name.length() - 1 && name.charAt(i + 1) != '[' && (i == 0 || name.charAt(i - 1) != '[')){
-                String prev = name.substring(0, i);
-                String next = name.substring(i);
-                String result = checkColor(next);
-
-                name = prev + result;
-            }
-        }
-
-        return name;
-    }
-
-    static String checkColor(String str){
-        for(int i = 1; i < str.length(); i++){
-            if(str.charAt(i) == ']'){
-                String color = str.substring(1, i);
-
-                if(Colors.get(color.toUpperCase()) != null || Colors.get(color.toLowerCase()) != null){
-                    arc.graphics.Color result = (Colors.get(color.toLowerCase()) == null ? Colors.get(color.toUpperCase()) : Colors.get(color.toLowerCase()));
-                    if(result.a <= 0.8f){
-                        return str.substring(i + 1);
-                    }
-                }else{
-                    try{
-                        arc.graphics.Color result = arc.graphics.Color.valueOf(color);
-                        if(result.a <= 0.8f){
-                            return str.substring(i + 1);
-                        }
-                    }catch(Exception e){
-                        return str;
-                    }
-                }
-            }
-        }
-        return str;
     }
 }

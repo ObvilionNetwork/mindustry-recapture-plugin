@@ -24,16 +24,7 @@ public class Recapture extends Plugin {
 
     @Override
     public void registerClientCommands(CommandHandler handler) {
-        handler.<Player>register("t", "<message...>", "Send a message only to your teammates.", (args, player) -> {
-            String text = args[0];
-            if (text != null) {
-                Groups.player.each((p) -> {
-                    return p.team() == player.team();
-                }, (o) -> {
-                    o.sendMessage(Lang.get("teamMessage", player.color.toString(), player.name, text));
-                });
-            }
-        });
+
     }
 
     @Override
