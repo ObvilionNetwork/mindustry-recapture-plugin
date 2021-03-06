@@ -33,7 +33,7 @@ desktop-sdl/build/
 /core/src/io/anuke/mindustry/gen/
 ios/robovm.properties
 packr-out/
-config/
+/config/
 *.gif
 
 version.properties
