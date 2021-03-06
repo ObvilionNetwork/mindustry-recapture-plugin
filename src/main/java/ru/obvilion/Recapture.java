@@ -29,7 +29,7 @@ public class Recapture extends Plugin {
 
     @Override
     public void registerServerCommands(CommandHandler handler) {
-        handler.register("recaprure", "[args...]", "ObvilionRecapture settings", arg -> {
+        handler.register("recapture", "[args...]", "ObvilionRecapture settings", arg -> {
             if (arg.length == 0) {
                 Log.info("Too few command arguments. Usage:");
                 Log.info("> recaprure version - Show version ObvilionRecapture plugin.");

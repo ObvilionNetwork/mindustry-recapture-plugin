@@ -49,18 +49,21 @@ public class Loader {
             });
         });
 
-        Events.on(EventType.PlayEvent.class, playEvent -> {
-            Groups.player.forEach(TeamHelper::updatePlayerTeam);
-        });
-
         Events.on(CoreCaptureEvent.class, event -> {
             if (Vars.state.isPaused()) return;
 
             final Unit player = event.unit;
             final CoreBlock.CoreBuild core = event.core;
 
-            int id = CoreCaptureEvent.cores.indexOf(core);
-            final float multiplier = player.type.weapons.first().bullet.damage * 0.0025f * Config.getFloat("multiplier");
+            int id = -1;
+            if (!CoreCaptureEvent.cores.isEmpty()) {
+                id = CoreCaptureEvent.cores.indexOf(core);
+            }
+
+            float multiplier = 0.001f;
+            if (!player.type.weapons.isEmpty()) {
+                multiplier = player.type.weapons.first().bullet.damage * 0.003f * Config.getFloat("multiplier");
+            }
 
             float x = core.x / 8 - (float) core.block.size / 2 - 0.5f;
             float y = core.y / 8 - (float) core.block.size / 2 - 0.5f;
