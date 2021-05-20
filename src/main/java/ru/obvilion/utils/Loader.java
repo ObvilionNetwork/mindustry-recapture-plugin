@@ -1,16 +1,13 @@
 package ru.obvilion.utils;
 
 import arc.Events;
-import arc.struct.Seq;
 import mindustry.Vars;
-import mindustry.content.UnitTypes;
-import mindustry.core.NetServer;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.game.Teams;
 import mindustry.gen.*;
-
 import mindustry.world.blocks.storage.CoreBlock;
+
 import ru.obvilion.config.Config;
 import ru.obvilion.config.Lang;
 import ru.obvilion.effects.EffectHelper;
@@ -40,7 +37,6 @@ public class Loader {
 
         Events.on(EventType.WorldLoadEvent.class, playEvent -> {
             final int[] index = {0};
-
             Team.blue.cores().copy().forEach(coreBuild -> {
                 Call.removeTile(coreBuild.tile);
                 Call.setTile(coreBuild.tile, coreBuild.block, TeamHelper.teams[index[0]], 0);
@@ -75,7 +71,7 @@ public class Loader {
 
                 CoreCaptureEvent.x.add(x);
                 CoreCaptureEvent.y.add(y);
-                id = 0;
+                id = CoreCaptureEvent.cores.indexOf(core);
             }
 
             final int finalId = id;
@@ -95,12 +91,16 @@ public class Loader {
                         Call.removeTile(core.tile);
 
                         Call.setTile(core.tile, core.block, event.unit.team, 0);
+                        core.health = Float.POSITIVE_INFINITY;
+
                         Call.sendMessage(Lang.get("captured", Lang.get("team." + event.unit.team.name), event.unit.team.color.toString()));
                     } else {
                         CoreCaptureEvent.remove(core);
                         Call.removeTile(core.tile);
 
                         Call.setTile(core.tile, core.block, Team.all[1], 0);
+                        core.health = Float.POSITIVE_INFINITY;
+
                         Call.sendMessage(Lang.get("recaptured", Lang.get("team." + core.team.name), core.team.color.toString()));
 
                         if (core.team().cores().size == 0) {
