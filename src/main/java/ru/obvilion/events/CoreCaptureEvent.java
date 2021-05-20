@@ -9,7 +9,6 @@ import mindustry.gen.Call;
 import mindustry.gen.Unit;
 import mindustry.world.blocks.storage.CoreBlock.CoreBuild;
 import ru.obvilion.config.Config;
-import ru.obvilion.config.Lang;
 
 public class CoreCaptureEvent {
     public static Seq<CoreBuild> cores = new Seq<>();
@@ -50,7 +49,11 @@ public class CoreCaptureEvent {
                     }
 
                     final Teams.TeamData data = Vars.state.teams.active.find(teamData -> teamData.team.name.equals(CoreCaptureEvent.statuses.get(id)));
-                    final String message = data == null ? Lang.get("team.notFound") : "[#" + data.team.color.toString() + "]" + round(CoreCaptureEvent.health.get(id), 2) + "%";
+                    if (data == null) CoreCaptureEvent.statuses.set(id, team.team.name);
+
+                    final String message = data == null
+                            ? "[#" + team.team.color.toString() + "]" + round(CoreCaptureEvent.health.get(id), 2) + "%"
+                            : "[#" + data.team.color.toString() + "]" + round(CoreCaptureEvent.health.get(id), 2) + "%";
 
                     Call.label(
                             message,
