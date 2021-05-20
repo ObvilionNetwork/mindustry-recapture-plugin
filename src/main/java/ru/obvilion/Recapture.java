@@ -3,19 +3,13 @@ package ru.obvilion;
 import arc.files.Fi;
 import arc.util.Log;
 import arc.util.CommandHandler;
-import mindustry.Vars;
-import mindustry.core.NetClient;
-import mindustry.gen.Call;
-import mindustry.gen.Groups;
-import mindustry.gen.Player;
 import mindustry.mod.Plugin;
 
-import ru.obvilion.config.Lang;
 import ru.obvilion.utils.Loader;
 
 public class Recapture extends Plugin {
     public static final Fi pluginDir = new Fi("./config/mods/ObvilionRecapture");
-    public static final String VERSION = "0.1";
+    public static final String VERSION = "0.8";
 
     @Override
     public void init() {
