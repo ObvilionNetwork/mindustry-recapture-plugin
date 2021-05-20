@@ -5,6 +5,7 @@ import arc.struct.Seq;
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
+import mindustry.gen.Call;
 import mindustry.gen.Groups;
 import mindustry.gen.Player;
 
@@ -15,8 +16,10 @@ public class TeamHelper {
 
     public static void updatePlayerTeam(Player player) {
         final Team team = checkTeam(player);
+
         if (countTeams() > 1) {
             player.team(team);
+            Call.setPlayerTeamEditor(player, team);
             player.unit().health = 0f;
         } else {
             Events.fire(new EventType.GameOverEvent(team));
@@ -27,9 +30,6 @@ public class TeamHelper {
         final int[] count = {0};
 
         Vars.state.teams.active.forEach(teamData -> {
-            final Team team = teamData.team;
-            if (team == Team.crux || team == Team.sharded) return;
-
             count[0] += 1;
         });
 
@@ -40,7 +40,6 @@ public class TeamHelper {
         final int[] minPlayers = {10000};
 
         AtomicReference<Team> result = new AtomicReference<>(null);
-
         Vars.state.teams.active.forEach(teamData -> {
             final Team team = teamData.team;
             if (team == Team.crux || team == Team.sharded) return;
