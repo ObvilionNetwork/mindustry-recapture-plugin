@@ -27,13 +27,7 @@ public class TeamHelper {
     }
 
     public static int countTeams() {
-        final int[] count = {0};
-
-        Vars.state.teams.active.forEach(teamData -> {
-            count[0] += 1;
-        });
-
-        return count[0];
+        return Vars.state.teams.active.size;
     }
 
     public static Team checkTeam(Player player) {
