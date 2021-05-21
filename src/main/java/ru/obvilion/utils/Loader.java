@@ -43,6 +43,12 @@ public class Loader {
 
                 index[0]++;
             });
+
+            for (Teams.TeamData team : Vars.state.teams.active) {
+                for (CoreBlock.CoreBuild core : team.cores) {
+                    core.health = Float.POSITIVE_INFINITY;
+                }
+            }
         });
 
         Events.on(CoreCaptureEvent.class, event -> {
